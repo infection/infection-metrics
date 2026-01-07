@@ -6,6 +6,7 @@
     <title>Infection Performance Metrics</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-error-bars"></script>
     <style>
         :root {
             --bg-color: #1a1a2e;
@@ -34,6 +35,24 @@
             text-align: center;
             color: var(--text-muted);
             margin-bottom: 30px;
+        }
+        .filter-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .filter-select {
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--highlight);
         }
         .charts-grid {
             display: grid;
@@ -174,6 +193,10 @@
             }
         };
 
+        // Global state
+        let allMetrics = [];
+        let charts = [];
+
         async function loadMetrics() {
             try {
                 const response = await fetch('metrics.jsonl');
@@ -193,6 +216,76 @@
             }
         }
 
+        function filterMetrics(metrics, filter) {
+            if (filter === 'all') {
+                return metrics;
+            }
+            // Production: only main/master branches
+            return metrics.filter(m =>
+                m.git_ref === 'refs/heads/main' ||
+                m.git_ref === 'refs/heads/master'
+            );
+        }
+
+        function stddev(values, mean) {
+            if (values.length < 2) return 0;
+            const sqDiffs = values.map(v => Math.pow(v - mean, 2));
+            return Math.sqrt(sqDiffs.reduce((a, b) => a + b, 0) / (values.length - 1));
+        }
+
+        function processMetrics(metrics) {
+            // Group by git_sha and calculate statistics
+            const byCommit = new Map();
+            for (const m of metrics) {
+                const sha = m.git_sha;
+                if (!byCommit.has(sha)) {
+                    byCommit.set(sha, []);
+                }
+                byCommit.get(sha).push(m);
+            }
+
+            // Calculate mean and stddev for each commit
+            const processed = [];
+            for (const [sha, measurements] of byCommit) {
+                const first = measurements[0];
+                const count = measurements.length;
+
+                const wallClockValues = measurements.map(m => m.wall_clock_sec);
+                const memoryValues = measurements.map(m => m.max_rss_kb);
+                const wallPerCoreValues = measurements.map(m => m.derived.wall_clock_per_core);
+                const cpuTotalValues = measurements.map(m => m.derived.cpu_time_total);
+
+                const wallClockMean = wallClockValues.reduce((a, b) => a + b, 0) / count;
+                const memoryMean = memoryValues.reduce((a, b) => a + b, 0) / count;
+                const wallPerCoreMean = wallPerCoreValues.reduce((a, b) => a + b, 0) / count;
+                const cpuTotalMean = cpuTotalValues.reduce((a, b) => a + b, 0) / count;
+
+                processed.push({
+                    ...first,
+                    wall_clock_sec: wallClockMean,
+                    wall_clock_stddev: stddev(wallClockValues, wallClockMean),
+                    max_rss_kb: memoryMean,
+                    max_rss_stddev: stddev(memoryValues, memoryMean),
+                    derived: {
+                        wall_clock_per_core: wallPerCoreMean,
+                        wall_clock_per_core_stddev: stddev(wallPerCoreValues, wallPerCoreMean),
+                        cpu_time_total: cpuTotalMean,
+                        cpu_time_stddev: stddev(cpuTotalValues, cpuTotalMean),
+                    },
+                    _measurement_count: count,
+                });
+            }
+
+            // Sort by commit_date
+            processed.sort((a, b) => {
+                const dateA = a.commit_date ? new Date(a.commit_date) : new Date(a.timestamp);
+                const dateB = b.commit_date ? new Date(b.commit_date) : new Date(b.timestamp);
+                return dateA - dateB;
+            });
+
+            return processed;
+        }
+
         function formatDuration(seconds) {
             if (seconds < 60) return `${seconds.toFixed(1)}s`;
             const mins = Math.floor(seconds / 60);
@@ -206,14 +299,48 @@
             return `${(mb / 1024).toFixed(2)} GB`;
         }
 
-        function renderApp(metrics) {
-            const latest = metrics[metrics.length - 1];
+        function destroyCharts() {
+            charts.forEach(chart => chart.destroy());
+            charts = [];
+        }
+
+        function renderApp(metrics, filter = 'all') {
+            const filtered = processMetrics(filterMetrics(metrics, filter));
+
+            if (filtered.length === 0) {
+                document.getElementById('app').innerHTML = `
+                    <div class="filter-row">
+                        <select class="filter-select" id="branch-filter">
+                            <option value="all"${filter === 'all' ? ' selected' : ''}>All branches</option>
+                            <option value="production"${filter === 'production' ? ' selected' : ''}>Production only (main/master)</option>
+                        </select>
+                    </div>
+                    <div class="error">
+                        <h2>No Data</h2>
+                        <p>No metrics found for the selected filter. Try "All branches".</p>
+                    </div>
+                `;
+                document.getElementById('branch-filter').addEventListener('change', (e) => {
+                    destroyCharts();
+                    renderApp(allMetrics, e.target.value);
+                });
+                return;
+            }
+
+            const latest = filtered[filtered.length - 1];
             const app = document.getElementById('app');
 
             app.innerHTML = `
+                <div class="filter-row">
+                    <select class="filter-select" id="branch-filter">
+                        <option value="all"${filter === 'all' ? ' selected' : ''}>All branches</option>
+                        <option value="production"${filter === 'production' ? ' selected' : ''}>Production only (main/master)</option>
+                    </select>
+                </div>
+
                 <div class="stats-row">
                     <div class="stat-card">
-                        <div class="stat-value">${metrics.length}</div>
+                        <div class="stat-value">${filtered.length}</div>
                         <div class="stat-label">Total Runs</div>
                     </div>
                     <div class="stat-card">
@@ -288,19 +415,34 @@
                 </div>
             `;
 
-            // Prepare chart data
-            const timestamps = metrics.map(m => new Date(m.timestamp));
+            // Add filter change listener
+            document.getElementById('branch-filter').addEventListener('change', (e) => {
+                destroyCharts();
+                renderApp(allMetrics, e.target.value);
+            });
 
-            // Wall Clock Time
-            new Chart(document.getElementById('chart-wall-clock'), {
-                type: 'line',
+            // Prepare chart data
+            // Use commit_date for x-axis (when code was written), fallback to timestamp
+            const commitDates = filtered.map(m => new Date(m.commit_date || m.timestamp));
+
+            // Wall Clock Time (with error bars)
+            charts.push(new Chart(document.getElementById('chart-wall-clock'), {
+                type: 'lineWithErrorBars',
                 data: {
-                    labels: timestamps,
+                    labels: commitDates,
                     datasets: [{
-                        data: metrics.map(m => m.wall_clock_sec),
+                        data: filtered.map(m => ({
+                            y: m.wall_clock_sec,
+                            yMin: m.wall_clock_sec - m.wall_clock_stddev,
+                            yMax: m.wall_clock_sec + m.wall_clock_stddev
+                        })),
                         borderColor: chartColors.wallClock,
                         backgroundColor: chartColors.wallClock + '20',
-                        fill: true,
+                        errorBarColor: chartColors.wallClock,
+                        errorBarWhiskerColor: chartColors.wallClock,
+                        errorBarLineWidth: 2,
+                        errorBarWhiskerLineWidth: 2,
+                        fill: false,
                         tension: 0.3,
                         pointRadius: 4,
                         pointHoverRadius: 6
@@ -320,18 +462,26 @@
                         }
                     }
                 }
-            });
+            }));
 
-            // Wall Clock Per Core
-            new Chart(document.getElementById('chart-wall-per-core'), {
-                type: 'line',
+            // Wall Clock Per Core (with error bars)
+            charts.push(new Chart(document.getElementById('chart-wall-per-core'), {
+                type: 'lineWithErrorBars',
                 data: {
-                    labels: timestamps,
+                    labels: commitDates,
                     datasets: [{
-                        data: metrics.map(m => m.derived.wall_clock_per_core),
+                        data: filtered.map(m => ({
+                            y: m.derived.wall_clock_per_core,
+                            yMin: m.derived.wall_clock_per_core - m.derived.wall_clock_per_core_stddev,
+                            yMax: m.derived.wall_clock_per_core + m.derived.wall_clock_per_core_stddev
+                        })),
                         borderColor: chartColors.wallClock,
                         backgroundColor: chartColors.wallClock + '20',
-                        fill: true,
+                        errorBarColor: chartColors.wallClock,
+                        errorBarWhiskerColor: chartColors.wallClock,
+                        errorBarLineWidth: 2,
+                        errorBarWhiskerLineWidth: 2,
+                        fill: false,
                         tension: 0.3,
                         pointRadius: 4,
                         pointHoverRadius: 6
@@ -351,18 +501,26 @@
                         }
                     }
                 }
-            });
+            }));
 
-            // CPU Time
-            new Chart(document.getElementById('chart-cpu-time'), {
-                type: 'line',
+            // CPU Time (with error bars)
+            charts.push(new Chart(document.getElementById('chart-cpu-time'), {
+                type: 'lineWithErrorBars',
                 data: {
-                    labels: timestamps,
+                    labels: commitDates,
                     datasets: [{
-                        data: metrics.map(m => m.derived.cpu_time_total),
+                        data: filtered.map(m => ({
+                            y: m.derived.cpu_time_total,
+                            yMin: m.derived.cpu_time_total - m.derived.cpu_time_stddev,
+                            yMax: m.derived.cpu_time_total + m.derived.cpu_time_stddev
+                        })),
                         borderColor: chartColors.cpuTime,
                         backgroundColor: chartColors.cpuTime + '20',
-                        fill: true,
+                        errorBarColor: chartColors.cpuTime,
+                        errorBarWhiskerColor: chartColors.cpuTime,
+                        errorBarLineWidth: 2,
+                        errorBarWhiskerLineWidth: 2,
+                        fill: false,
                         tension: 0.3,
                         pointRadius: 4,
                         pointHoverRadius: 6
@@ -382,18 +540,26 @@
                         }
                     }
                 }
-            });
+            }));
 
-            // Memory
-            new Chart(document.getElementById('chart-memory'), {
-                type: 'line',
+            // Memory (with error bars)
+            charts.push(new Chart(document.getElementById('chart-memory'), {
+                type: 'lineWithErrorBars',
                 data: {
-                    labels: timestamps,
+                    labels: commitDates,
                     datasets: [{
-                        data: metrics.map(m => m.max_rss_kb / 1024), // Convert to MB
+                        data: filtered.map(m => ({
+                            y: m.max_rss_kb / 1024,
+                            yMin: (m.max_rss_kb - m.max_rss_stddev) / 1024,
+                            yMax: (m.max_rss_kb + m.max_rss_stddev) / 1024
+                        })),
                         borderColor: chartColors.memory,
                         backgroundColor: chartColors.memory + '20',
-                        fill: true,
+                        errorBarColor: chartColors.memory,
+                        errorBarWhiskerColor: chartColors.memory,
+                        errorBarLineWidth: 2,
+                        errorBarWhiskerLineWidth: 2,
+                        fill: false,
                         tension: 0.3,
                         pointRadius: 4,
                         pointHoverRadius: 6
@@ -413,7 +579,7 @@
                         }
                     }
                 }
-            });
+            }));
         }
 
         function renderError(message) {
@@ -427,7 +593,10 @@
 
         // Initialize
         loadMetrics()
-            .then(renderApp)
+            .then(metrics => {
+                allMetrics = metrics;
+                renderApp(metrics, 'all'); // Default to 'all'
+            })
             .catch(err => renderError(err.message));
     </script>
 </body>

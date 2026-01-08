@@ -52,20 +52,20 @@ function destroyCharts() {
     charts = [];
 }
 
-function renderApp(metrics, filter = 'all') {
+function renderApp(metrics, filter = 'production') {
     const filtered = processMetrics(filterMetrics(metrics, filter));
 
     if (filtered.length === 0) {
         document.getElementById('app').innerHTML = `
             <div class="filter-row">
                 <select class="filter-select" id="branch-filter">
-                    <option value="all"${filter === 'all' ? ' selected' : ''}>All branches</option>
-                    <option value="production"${filter === 'production' ? ' selected' : ''}>Production only (main/master)</option>
+                    <option value="production"${filter === 'production' ? ' selected' : ''}>Releases only (tags + main)</option>
+                    <option value="all"${filter === 'all' ? ' selected' : ''}>All builds</option>
                 </select>
             </div>
             <div class="error">
                 <h2>No Data</h2>
-                <p>No metrics found for the selected filter. Try "All branches".</p>
+                <p>No metrics found for the selected filter.</p>
             </div>
         `;
         document.getElementById('branch-filter').addEventListener('change', (e) => {
@@ -85,8 +85,8 @@ function renderApp(metrics, filter = 'all') {
     app.innerHTML = `
         <div class="filter-row">
             <select class="filter-select" id="branch-filter">
-                <option value="all"${filter === 'all' ? ' selected' : ''}>All branches</option>
-                <option value="production"${filter === 'production' ? ' selected' : ''}>Production only (main/master)</option>
+                <option value="production"${filter === 'production' ? ' selected' : ''}>Releases only (tags + main)</option>
+                <option value="all"${filter === 'all' ? ' selected' : ''}>All builds</option>
             </select>
         </div>
 
@@ -239,6 +239,6 @@ function renderError(message) {
 loadMetrics()
     .then(metrics => {
         allMetrics = metrics;
-        renderApp(metrics, 'all');
+        renderApp(metrics, 'production');
     })
     .catch(err => renderError(err.message));

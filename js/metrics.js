@@ -23,8 +23,9 @@ function filterMetrics(metrics, filter) {
     if (filter === 'all') {
         return metrics;
     }
-    // Production: only main/master branches
+    // Production: tags (no refs/ prefix) + main/master branches
     return metrics.filter(m =>
+        !m.git_ref.startsWith('refs/heads/') ||
         m.git_ref === 'refs/heads/main' ||
         m.git_ref === 'refs/heads/master'
     );

@@ -67,6 +67,12 @@ function processMetrics(metrics) {
             ((m.user_time_sec + m.system_time_sec) / (m.wall_clock_sec * m.runner.cpu_cores)) * 100
         );
 
+        // Mutation stats (may not exist in older entries)
+        const hasMutations = first.mutations?.total > 0;
+        const mutationCountValues = measurements.map(m => m.mutations?.total || 0);
+        const wallPerMutationValues = measurements.map(m => m.derived?.wall_clock_per_mutation || 0);
+        const msiValues = measurements.map(m => m.mutations?.msi || 0);
+
         const wallClockMean = wallClockValues.reduce((a, b) => a + b, 0) / count;
         const memoryMean = memoryValues.reduce((a, b) => a + b, 0) / count;
         const wallPerCoreMean = wallPerCoreValues.reduce((a, b) => a + b, 0) / count;
@@ -76,6 +82,9 @@ function processMetrics(metrics) {
         const userTimeMean = userTimeValues.reduce((a, b) => a + b, 0) / count;
         const systemTimeMean = systemTimeValues.reduce((a, b) => a + b, 0) / count;
         const cpuEfficiencyMean = cpuEfficiencyValues.reduce((a, b) => a + b, 0) / count;
+        const mutationCountMean = hasMutations ? mutationCountValues.reduce((a, b) => a + b, 0) / count : 0;
+        const wallPerMutationMean = hasMutations ? wallPerMutationValues.reduce((a, b) => a + b, 0) / count : 0;
+        const msiMean = hasMutations ? msiValues.reduce((a, b) => a + b, 0) / count : 0;
 
         processed.push({
             ...first,
@@ -91,6 +100,12 @@ function processMetrics(metrics) {
             user_time_stddev: stddev(userTimeValues, userTimeMean),
             system_time_sec: systemTimeMean,
             system_time_stddev: stddev(systemTimeValues, systemTimeMean),
+            mutations: hasMutations ? {
+                total: mutationCountMean,
+                total_stddev: stddev(mutationCountValues, mutationCountMean),
+                msi: msiMean,
+                msi_stddev: stddev(msiValues, msiMean),
+            } : null,
             derived: {
                 wall_clock_per_core: wallPerCoreMean,
                 wall_clock_per_core_stddev: stddev(wallPerCoreValues, wallPerCoreMean),
@@ -98,6 +113,8 @@ function processMetrics(metrics) {
                 cpu_time_stddev: stddev(cpuTotalValues, cpuTotalMean),
                 cpu_efficiency: cpuEfficiencyMean,
                 cpu_efficiency_stddev: stddev(cpuEfficiencyValues, cpuEfficiencyMean),
+                wall_clock_per_mutation: wallPerMutationMean,
+                wall_clock_per_mutation_stddev: hasMutations ? stddev(wallPerMutationValues, wallPerMutationMean) : 0,
             },
             _measurement_count: count,
         });

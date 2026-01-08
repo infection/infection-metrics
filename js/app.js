@@ -214,6 +214,25 @@ function renderApp(metrics, filter = 'production') {
                 </div>
             </div>
         </section>
+
+        <section class="chart-section">
+            <h2 class="chart-section-header">Normalized Metrics (Per Mutation)</h2>
+            <p class="chart-section-description">These metrics normalize performance by mutation count, enabling fair comparison across versions with different codebase sizes.</p>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Wall Clock Per Mutation</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-wall-per-mutation"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Mutation Count</h3>
+                    <div class="chart-container">
+                        <canvas id="chart-mutation-count"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
     `;
 
     // Add filter change listener

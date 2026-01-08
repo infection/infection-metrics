@@ -195,6 +195,12 @@ a {
     letter-spacing: 0.1em;
 }
 
+.chart-section-description {
+    color: var(--text-muted);
+    font-size: 0.9em;
+    margin: -10px 0 15px 0;
+}
+
 /* Run count indicator */
 .run-count {
     font-size: 0.7em;

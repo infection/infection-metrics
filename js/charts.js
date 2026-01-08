@@ -383,6 +383,92 @@ function createMemoryChart(ctx, filtered, commitDates) {
     });
 }
 
+function createWallPerMutationChart(ctx, filtered, commitDates) {
+    const commonOptions = getCommonOptions(filtered);
+    // Filter to only entries with mutation data
+    const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const chartData = withMutations.map(({ m, i }) => ({
+        x: commitDates[i],
+        y: m.derived.wall_clock_per_mutation * 1000, // Convert to milliseconds
+        yMin: (m.derived.wall_clock_per_mutation - m.derived.wall_clock_per_mutation_stddev) * 1000,
+        yMax: (m.derived.wall_clock_per_mutation + m.derived.wall_clock_per_mutation_stddev) * 1000
+    }));
+    return new Chart(ctx, {
+        type: 'lineWithErrorBars',
+        data: {
+            datasets: [{
+                data: chartData,
+                borderColor: '#06b6d4',
+                backgroundColor: '#06b6d4',
+                errorBarColor: '#06b6d4',
+                errorBarWhiskerColor: '#06b6d4',
+                errorBarLineWidth: 2,
+                errorBarWhiskerLineWidth: 2,
+                showLine: false,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'ms / mutation',
+                        color: '#888'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createMutationCountChart(ctx, filtered, commitDates) {
+    const commonOptions = getCommonOptions(filtered);
+    // Filter to only entries with mutation data
+    const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const chartData = withMutations.map(({ m, i }) => ({
+        x: commitDates[i],
+        y: m.mutations.total,
+        yMin: m.mutations.total - m.mutations.total_stddev,
+        yMax: m.mutations.total + m.mutations.total_stddev
+    }));
+    return new Chart(ctx, {
+        type: 'lineWithErrorBars',
+        data: {
+            datasets: [{
+                data: chartData,
+                borderColor: '#ec4899',
+                backgroundColor: '#ec4899',
+                errorBarColor: '#ec4899',
+                errorBarWhiskerColor: '#ec4899',
+                errorBarLineWidth: 2,
+                errorBarWhiskerLineWidth: 2,
+                showLine: false,
+                pointRadius: 5,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Count',
+                        color: '#888'
+                    }
+                }
+            }
+        }
+    });
+}
+
 function createContextSwitchesChart(ctx, filtered, commitDates) {
     const commonOptions = getCommonOptions(filtered);
     const voluntaryData = filtered.map((m, i) => ({
@@ -508,6 +594,17 @@ function createAllCharts(filtered) {
         filtered,
         commitDates
     ));
+
+    // Normalized metrics (only if mutation data exists)
+    const wallPerMutationCtx = document.getElementById('chart-wall-per-mutation');
+    if (wallPerMutationCtx) {
+        charts.push(createWallPerMutationChart(wallPerMutationCtx, filtered, commitDates));
+    }
+
+    const mutationCountCtx = document.getElementById('chart-mutation-count');
+    if (mutationCountCtx) {
+        charts.push(createMutationCountChart(mutationCountCtx, filtered, commitDates));
+    }
 
     return charts;
 }

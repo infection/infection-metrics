@@ -1,5 +1,11 @@
 // Chart configuration and creation
 
+function formatSecondsAsTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.round(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 const chartColors = {
     wallClock: '#e94560',
     cpuTime: '#0ea5e9',
@@ -8,7 +14,7 @@ const chartColors = {
     involuntaryCtx: '#8b5cf6'
 };
 
-function getCommonOptions(filtered) {
+function getCommonOptions(filtered, formatAsTime = false) {
     return {
         responsive: true,
         maintainAspectRatio: false,
@@ -23,6 +29,10 @@ function getCommonOptions(filtered) {
                         const m = filtered[idx];
                         return m.git_ref;
                     },
+                    label: formatAsTime ? (context) => {
+                        const value = context.parsed.y;
+                        return formatSecondsAsTime(value);
+                    } : undefined,
                     afterBody: (items) => {
                         const idx = items[0].dataIndex;
                         const m = filtered[idx];
@@ -66,7 +76,7 @@ function getCommonOptions(filtered) {
 }
 
 function createWallClockChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
+    const commonOptions = getCommonOptions(filtered, true);
     // Include x value with each data point for time scale + error bars
     const chartData = filtered.map((m, i) => ({
         x: commitDates[i],
@@ -96,9 +106,13 @@ function createWallClockChart(ctx, filtered, commitDates) {
                 ...commonOptions.scales,
                 y: {
                     ...commonOptions.scales.y,
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: (value) => formatSecondsAsTime(value)
+                    },
                     title: {
                         display: true,
-                        text: 'Seconds',
+                        text: 'MM:SS',
                         color: '#888'
                     }
                 }
@@ -108,7 +122,7 @@ function createWallClockChart(ctx, filtered, commitDates) {
 }
 
 function createWallPerCoreChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
+    const commonOptions = getCommonOptions(filtered, true);
     const chartData = filtered.map((m, i) => ({
         x: commitDates[i],
         y: m.derived.wall_clock_per_core,
@@ -137,9 +151,13 @@ function createWallPerCoreChart(ctx, filtered, commitDates) {
                 ...commonOptions.scales,
                 y: {
                     ...commonOptions.scales.y,
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: (value) => formatSecondsAsTime(value)
+                    },
                     title: {
                         display: true,
-                        text: 'Seconds / Core',
+                        text: 'MM:SS / Core',
                         color: '#888'
                     }
                 }
@@ -149,7 +167,7 @@ function createWallPerCoreChart(ctx, filtered, commitDates) {
 }
 
 function createCpuTimeChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
+    const commonOptions = getCommonOptions(filtered, true);
     const chartData = filtered.map((m, i) => ({
         x: commitDates[i],
         y: m.derived.cpu_time_total,
@@ -178,9 +196,13 @@ function createCpuTimeChart(ctx, filtered, commitDates) {
                 ...commonOptions.scales,
                 y: {
                     ...commonOptions.scales.y,
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: (value) => formatSecondsAsTime(value)
+                    },
                     title: {
                         display: true,
-                        text: 'Seconds',
+                        text: 'MM:SS',
                         color: '#888'
                     }
                 }
@@ -190,7 +212,7 @@ function createCpuTimeChart(ctx, filtered, commitDates) {
 }
 
 function createUserTimeChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
+    const commonOptions = getCommonOptions(filtered, true);
     const chartData = filtered.map((m, i) => ({
         x: commitDates[i],
         y: m.user_time_sec,
@@ -219,9 +241,13 @@ function createUserTimeChart(ctx, filtered, commitDates) {
                 ...commonOptions.scales,
                 y: {
                     ...commonOptions.scales.y,
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: (value) => formatSecondsAsTime(value)
+                    },
                     title: {
                         display: true,
-                        text: 'Seconds',
+                        text: 'MM:SS',
                         color: '#888'
                     }
                 }
@@ -231,7 +257,7 @@ function createUserTimeChart(ctx, filtered, commitDates) {
 }
 
 function createSystemTimeChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
+    const commonOptions = getCommonOptions(filtered, true);
     const chartData = filtered.map((m, i) => ({
         x: commitDates[i],
         y: m.system_time_sec,
@@ -260,9 +286,13 @@ function createSystemTimeChart(ctx, filtered, commitDates) {
                 ...commonOptions.scales,
                 y: {
                     ...commonOptions.scales.y,
+                    ticks: {
+                        ...commonOptions.scales.y.ticks,
+                        callback: (value) => formatSecondsAsTime(value)
+                    },
                     title: {
                         display: true,
-                        text: 'Seconds',
+                        text: 'MM:SS',
                         color: '#888'
                     }
                 }

@@ -5,10 +5,9 @@ let allMetrics = [];
 let charts = [];
 
 function formatDuration(seconds) {
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
     const mins = Math.floor(seconds / 60);
     const secs = Math.round(seconds % 60);
-    return `${mins}m ${secs}s`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 function formatMemory(kb) {

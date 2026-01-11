@@ -160,36 +160,42 @@ function renderApp(metrics, filter = 'production') {
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3>CPU Time (User + System)</h3>
+                    <p class="chart-subtitle">Total processing time across all cores (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-cpu-time"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>User Time</h3>
+                    <p class="chart-subtitle">CPU time in userspace: Infection, tests, and libraries (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-user-time"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>System Time</h3>
+                    <p class="chart-subtitle">Time spent in kernel I/O and process management (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-system-time"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>Wall Clock Time</h3>
+                    <p class="chart-subtitle">Total elapsed time from start to finish (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-wall-clock"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>CPU Efficiency</h3>
+                    <p class="chart-subtitle">Parallelization effectiveness: (user+sys)/(wall*cores) (higher is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-cpu-efficiency"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
-                    <h3>Wall Clock Per Core (Normalized)</h3>
+                    <h3>Wall Clock Per Core</h3>
+                    <p class="chart-subtitle">Elapsed time normalized by core count for hardware comparison (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-wall-per-core"></canvas>
                     </div>
@@ -202,12 +208,14 @@ function renderApp(metrics, filter = 'production') {
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3>Peak Memory (RSS)</h3>
+                    <p class="chart-subtitle">Maximum memory usage during run (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-memory"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>Context Switches</h3>
+                    <p class="chart-subtitle">Voluntary = I/O waits, Involuntary = CPU preemption (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-context-switches"></canvas>
                     </div>
@@ -221,12 +229,14 @@ function renderApp(metrics, filter = 'production') {
             <div class="charts-grid">
                 <div class="chart-card">
                     <h3>Wall Clock Per Mutation</h3>
+                    <p class="chart-subtitle">Average time to generate, test, and record each mutation (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-wall-per-mutation"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
                     <h3>Mutation Count</h3>
+                    <p class="chart-subtitle">Total mutations generated (informational)</p>
                     <div class="chart-container">
                         <canvas id="chart-mutation-count"></canvas>
                     </div>

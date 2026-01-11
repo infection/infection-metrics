@@ -93,7 +93,7 @@ function renderApp(metrics, filter = 'production') {
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-value">${filtered.length}</div>
-                <div class="stat-label">Total Runs</div>
+                <div class="stat-label">Data Points</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value">${formatDuration(latest.wall_clock_sec)}</div>

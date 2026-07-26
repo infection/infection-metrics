@@ -86,6 +86,7 @@ function getCommonOptions(filtered, formatAsTime = false) {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         layout: {
             padding: { top: 40 }
         },

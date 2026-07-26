@@ -14,7 +14,7 @@ infection-metrics is a visualization dashboard for long-term performance metrics
 infection-metrics/
   index.html           # Main HTML structure
   css/
-    styles.css         # All styles (dark theme)
+    styles.css         # All styles (light theme, matching infection-php.dev)
   js/
     metrics.js         # Data loading, processing, aggregation
     charts.js          # Chart.js configurations and creation

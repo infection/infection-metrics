@@ -1,10 +1,12 @@
 :root {
-    --bg-color: #1a1a2e;
-    --card-bg: #16213e;
-    --text-color: #eee;
-    --text-muted: #888;
-    --accent: #0f3460;
-    --highlight: #e94560;
+    --bg-color: #f9fafb;
+    --card-bg: #ffffff;
+    --text-color: #374151;
+    --text-strong: #111827;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --brand: #16a34a;
+    --brand-dark: #15803d;
 }
 
 * {
@@ -23,6 +25,7 @@ body {
 h1 {
     text-align: center;
     margin-bottom: 10px;
+    color: var(--text-strong);
 }
 
 .subtitle {
@@ -40,7 +43,7 @@ h1 {
 .filter-select {
     background: var(--card-bg);
     color: var(--text-color);
-    border: 1px solid var(--accent);
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 8px 16px;
     font-size: 0.9em;
@@ -49,7 +52,7 @@ h1 {
 
 .filter-select:focus {
     outline: none;
-    border-color: var(--highlight);
+    border-color: var(--brand);
 }
 
 .charts-grid {
@@ -60,22 +63,22 @@ h1 {
 
 .chart-card {
     background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .chart-card h3 {
     margin: 0 0 5px 0;
     font-size: 1.1em;
-    color: var(--text-muted);
+    color: var(--text-strong);
 }
 
 .chart-subtitle {
     color: var(--text-muted);
     font-size: 0.8em;
     margin: 0 0 12px 0;
-    opacity: 0.7;
 }
 
 .chart-container {
@@ -93,6 +96,7 @@ h1 {
 
 .stat-card {
     background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 15px 25px;
     text-align: center;
@@ -102,7 +106,7 @@ h1 {
 .stat-value {
     font-size: 1.8em;
     font-weight: bold;
-    color: var(--highlight);
+    color: var(--brand);
 }
 
 .stat-label {
@@ -111,21 +115,25 @@ h1 {
 }
 
 .latest-run {
-    background: var(--accent);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
     max-width: 1400px;
     margin: 0 auto 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .latest-run h2 {
     margin: 0 0 15px 0;
     font-size: 1.2em;
+    color: var(--text-strong);
 }
 
 .error {
-    background: #4a1a1a;
-    color: #ff6b6b;
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
     padding: 20px;
     border-radius: 8px;
     text-align: center;
@@ -140,7 +148,7 @@ h1 {
 }
 
 a {
-    color: var(--highlight);
+    color: var(--brand-dark);
 }
 
 /* Grouped detail sections */
@@ -153,7 +161,7 @@ a {
 .detail-group {
     flex: 1;
     min-width: 180px;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-color);
     border-radius: 8px;
     padding: 15px;
 }
@@ -163,8 +171,8 @@ a {
     font-size: 0.9em;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--highlight);
-    border-bottom: 1px solid var(--accent);
+    color: var(--brand-dark);
+    border-bottom: 1px solid var(--border);
     padding-bottom: 5px;
 }
 
@@ -186,6 +194,7 @@ a {
     margin: 2px 0 0 0;
     font-family: monospace;
     font-size: 0.9em;
+    color: var(--text-strong);
 }
 
 /* Chart sections */

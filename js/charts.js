@@ -7,12 +7,24 @@ function formatSecondsAsTime(seconds) {
 }
 
 const chartColors = {
-    wallClock: '#e94560',
-    cpuTime: '#0ea5e9',
-    memory: '#10b981',
-    voluntaryCtx: '#f59e0b',
-    involuntaryCtx: '#8b5cf6'
+    primary: '#16a34a',
+    secondary: '#2563eb'
 };
+
+function errorBarDataset(data, color = chartColors.primary) {
+    return {
+        data,
+        borderColor: color,
+        backgroundColor: color,
+        errorBarColor: color,
+        errorBarWhiskerColor: color,
+        errorBarLineWidth: 2,
+        errorBarWhiskerLineWidth: 2,
+        showLine: false,
+        pointRadius: 5,
+        pointHoverRadius: 7
+    };
+}
 
 function getCommonOptions(filtered, formatAsTime = false) {
     return {
@@ -57,18 +69,18 @@ function getCommonOptions(filtered, formatAsTime = false) {
                     }
                 },
                 grid: {
-                    color: 'rgba(255,255,255,0.1)'
+                    color: 'rgba(0, 0, 0, 0.06)'
                 },
                 ticks: {
-                    color: '#888'
+                    color: '#6b7280'
                 }
             },
             y: {
                 grid: {
-                    color: 'rgba(255,255,255,0.1)'
+                    color: 'rgba(0, 0, 0, 0.06)'
                 },
                 ticks: {
-                    color: '#888'
+                    color: '#6b7280'
                 }
             }
         }
@@ -87,18 +99,7 @@ function createWallClockChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: chartColors.wallClock,
-                backgroundColor: chartColors.wallClock,
-                errorBarColor: chartColors.wallClock,
-                errorBarWhiskerColor: chartColors.wallClock,
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -113,7 +114,7 @@ function createWallClockChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'MM:SS',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -132,18 +133,7 @@ function createWallPerCoreChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: chartColors.wallClock,
-                backgroundColor: chartColors.wallClock,
-                errorBarColor: chartColors.wallClock,
-                errorBarWhiskerColor: chartColors.wallClock,
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -158,7 +148,7 @@ function createWallPerCoreChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'MM:SS / Core',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -177,18 +167,7 @@ function createCpuTimeChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: chartColors.cpuTime,
-                backgroundColor: chartColors.cpuTime,
-                errorBarColor: chartColors.cpuTime,
-                errorBarWhiskerColor: chartColors.cpuTime,
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -203,7 +182,7 @@ function createCpuTimeChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'MM:SS',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -222,18 +201,7 @@ function createUserTimeChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: '#22c55e',
-                backgroundColor: '#22c55e',
-                errorBarColor: '#22c55e',
-                errorBarWhiskerColor: '#22c55e',
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -248,7 +216,7 @@ function createUserTimeChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'MM:SS',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -267,18 +235,7 @@ function createSystemTimeChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: '#f97316',
-                backgroundColor: '#f97316',
-                errorBarColor: '#f97316',
-                errorBarWhiskerColor: '#f97316',
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -293,7 +250,7 @@ function createSystemTimeChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'MM:SS',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -312,18 +269,7 @@ function createCpuEfficiencyChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: '#a855f7',
-                backgroundColor: '#a855f7',
-                errorBarColor: '#a855f7',
-                errorBarWhiskerColor: '#a855f7',
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -334,7 +280,7 @@ function createCpuEfficiencyChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: '%',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -353,18 +299,7 @@ function createMemoryChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: chartColors.memory,
-                backgroundColor: chartColors.memory,
-                errorBarColor: chartColors.memory,
-                errorBarWhiskerColor: chartColors.memory,
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -375,7 +310,7 @@ function createMemoryChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'MB',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -396,18 +331,7 @@ function createWallPerMutationChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: '#06b6d4',
-                backgroundColor: '#06b6d4',
-                errorBarColor: '#06b6d4',
-                errorBarWhiskerColor: '#06b6d4',
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -418,7 +342,7 @@ function createWallPerMutationChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'ms / mutation',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -439,18 +363,7 @@ function createMutationCountChart(ctx, filtered, commitDates) {
     return new Chart(ctx, {
         type: 'lineWithErrorBars',
         data: {
-            datasets: [{
-                data: chartData,
-                borderColor: '#ec4899',
-                backgroundColor: '#ec4899',
-                errorBarColor: '#ec4899',
-                errorBarWhiskerColor: '#ec4899',
-                errorBarLineWidth: 2,
-                errorBarWhiskerLineWidth: 2,
-                showLine: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
+            datasets: [errorBarDataset(chartData)]
         },
         options: {
             ...commonOptions,
@@ -461,7 +374,7 @@ function createMutationCountChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'Count',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }
@@ -487,32 +400,8 @@ function createContextSwitchesChart(ctx, filtered, commitDates) {
         type: 'lineWithErrorBars',
         data: {
             datasets: [
-                {
-                    label: 'Voluntary',
-                    data: voluntaryData,
-                    borderColor: chartColors.voluntaryCtx,
-                    backgroundColor: chartColors.voluntaryCtx,
-                    errorBarColor: chartColors.voluntaryCtx,
-                    errorBarWhiskerColor: chartColors.voluntaryCtx,
-                    errorBarLineWidth: 2,
-                    errorBarWhiskerLineWidth: 2,
-                    showLine: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                },
-                {
-                    label: 'Involuntary',
-                    data: involuntaryData,
-                    borderColor: chartColors.involuntaryCtx,
-                    backgroundColor: chartColors.involuntaryCtx,
-                    errorBarColor: chartColors.involuntaryCtx,
-                    errorBarWhiskerColor: chartColors.involuntaryCtx,
-                    errorBarLineWidth: 2,
-                    errorBarWhiskerLineWidth: 2,
-                    showLine: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }
+                { label: 'Voluntary', ...errorBarDataset(voluntaryData) },
+                { label: 'Involuntary', ...errorBarDataset(involuntaryData, chartColors.secondary) }
             ]
         },
         options: {
@@ -523,7 +412,7 @@ function createContextSwitchesChart(ctx, filtered, commitDates) {
                     display: true,
                     position: 'top',
                     labels: {
-                        color: '#888',
+                        color: '#6b7280',
                         usePointStyle: true
                     }
                 }
@@ -535,7 +424,7 @@ function createContextSwitchesChart(ctx, filtered, commitDates) {
                     title: {
                         display: true,
                         text: 'Thousands',
-                        color: '#888'
+                        color: '#6b7280'
                     }
                 }
             }

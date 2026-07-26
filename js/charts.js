@@ -27,27 +27,36 @@ function errorBarDataset(data, color = chartColors.primary) {
 }
 
 function releaseAnnotations(filtered) {
+    const CLUSTER_MS = 21 * 24 * 3600 * 1000;
+    let prevDate = -Infinity;
+    let tier = 0;
     return Object.fromEntries(
         filtered
             .filter(m => !m.git_ref.startsWith('refs/'))
-            .map((m, i) => [`release-${i}`, {
-                type: 'line',
-                xMin: new Date(m.commit_date || m.timestamp).valueOf(),
-                xMax: new Date(m.commit_date || m.timestamp).valueOf(),
-                borderColor: '#d1d5db',
-                borderWidth: 1,
-                borderDash: [4, 4],
-                label: {
-                    display: true,
-                    content: m.git_ref,
-                    position: 'start',
-                    rotation: -90,
-                    font: { size: 9 },
-                    color: '#9ca3af',
-                    backgroundColor: 'transparent',
-                    padding: 2
-                }
-            }])
+            .map((m, i) => {
+                const date = new Date(m.commit_date || m.timestamp).valueOf();
+                tier = date - prevDate < CLUSTER_MS ? 1 - tier : 0;
+                prevDate = date;
+                return [`release-${i}`, {
+                    type: 'line',
+                    xMin: date,
+                    xMax: date,
+                    borderColor: '#d1d5db',
+                    borderWidth: 1,
+                    borderDash: [4, 4],
+                    label: {
+                        display: true,
+                        content: m.git_ref,
+                        position: 'end',
+                        yAdjust: -24 - tier * 40,
+                        rotation: -90,
+                        font: { size: 9 },
+                        color: '#9ca3af',
+                        backgroundColor: 'transparent',
+                        padding: 2
+                    }
+                }];
+            })
     );
 }
 
@@ -55,11 +64,15 @@ function getCommonOptions(filtered, formatAsTime = false) {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: { top: 88 }
+        },
         plugins: {
             legend: {
                 display: false
             },
             annotation: {
+                clip: false,
                 annotations: releaseAnnotations(filtered)
             },
             tooltip: {

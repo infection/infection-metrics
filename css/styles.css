@@ -37,6 +37,7 @@ h1 {
 .filter-row {
     display: flex;
     justify-content: center;
+    gap: 10px;
     margin-bottom: 20px;
 }
 
@@ -59,6 +60,10 @@ h1 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
     gap: 20px;
+}
+
+.chart-card.wide {
+    grid-column: 1 / -1;
 }
 
 .chart-card {

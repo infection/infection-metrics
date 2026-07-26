@@ -52,26 +52,50 @@ function destroyCharts() {
     charts = [];
 }
 
-function renderApp(metrics, filter = 'production') {
-    const filtered = processMetrics(filterMetrics(metrics, filter));
+function filterControls(filter, range) {
+    const option = (value, selected, label) =>
+        `<option value="${value}"${value === selected ? ' selected' : ''}>${label}</option>`;
+    return `
+        <div class="filter-row">
+            <select class="filter-select" id="branch-filter">
+                ${option('production', filter, 'Releases only (tags + main)')}
+                ${option('all', filter, 'All builds')}
+            </select>
+            <select class="filter-select" id="range-filter">
+                ${option('auto', range, 'Auto (all data)')}
+                ${option('6m', range, 'Last 6 months')}
+                ${option('3m', range, 'Last 3 months')}
+                ${option('1m', range, 'Last month')}
+            </select>
+        </div>
+    `;
+}
+
+function attachFilterListeners() {
+    const rerender = () => {
+        destroyCharts();
+        renderApp(
+            allMetrics,
+            document.getElementById('branch-filter').value,
+            document.getElementById('range-filter').value
+        );
+    };
+    document.getElementById('branch-filter').addEventListener('change', rerender);
+    document.getElementById('range-filter').addEventListener('change', rerender);
+}
+
+function renderApp(metrics, filter = 'production', range = 'auto') {
+    const filtered = filterByRange(processMetrics(filterMetrics(metrics, filter)), range);
 
     if (filtered.length === 0) {
         document.getElementById('app').innerHTML = `
-            <div class="filter-row">
-                <select class="filter-select" id="branch-filter">
-                    <option value="production"${filter === 'production' ? ' selected' : ''}>Releases only (tags + main)</option>
-                    <option value="all"${filter === 'all' ? ' selected' : ''}>All builds</option>
-                </select>
-            </div>
+            ${filterControls(filter, range)}
             <div class="error">
                 <h2>No Data</h2>
                 <p>No metrics found for the selected filter.</p>
             </div>
         `;
-        document.getElementById('branch-filter').addEventListener('change', (e) => {
-            destroyCharts();
-            renderApp(allMetrics, e.target.value);
-        });
+        attachFilterListeners();
         return;
     }
 
@@ -83,12 +107,7 @@ function renderApp(metrics, filter = 'production') {
     const app = document.getElementById('app');
 
     app.innerHTML = `
-        <div class="filter-row">
-            <select class="filter-select" id="branch-filter">
-                <option value="production"${filter === 'production' ? ' selected' : ''}>Releases only (tags + main)</option>
-                <option value="all"${filter === 'all' ? ' selected' : ''}>All builds</option>
-            </select>
-        </div>
+        ${filterControls(filter, range)}
 
         <div class="stats-row">
             <div class="stat-card">
@@ -159,11 +178,25 @@ function renderApp(metrics, filter = 'production') {
             <h2 class="chart-section-header">Normalized Metrics</h2>
             <p class="chart-section-description">These metrics normalize performance by mutation count and hardware, enabling fair comparison across versions and runners.</p>
             <div class="charts-grid">
-                <div class="chart-card">
+                <div class="chart-card wide">
                     <h3>Wall Clock Per Mutation</h3>
                     <p class="chart-subtitle">Average time to generate, test, and record each mutation (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-wall-per-mutation"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card wide">
+                    <h3>Mutation Count</h3>
+                    <p class="chart-subtitle">Total mutations generated: the denominator behind per-mutation metrics (informational)</p>
+                    <div class="chart-container">
+                        <canvas id="chart-mutation-count"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card wide">
+                    <h3>Context Switches Per Mutation</h3>
+                    <p class="chart-subtitle">Scheduler overhead per mutation: Voluntary = I/O waits, Involuntary = CPU preemption (lower is better)</p>
+                    <div class="chart-container">
+                        <canvas id="chart-ctx-per-mutation"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
@@ -234,22 +267,11 @@ function renderApp(metrics, filter = 'production') {
                         <canvas id="chart-context-switches"></canvas>
                     </div>
                 </div>
-                <div class="chart-card">
-                    <h3>Mutation Count</h3>
-                    <p class="chart-subtitle">Total mutations generated (informational)</p>
-                    <div class="chart-container">
-                        <canvas id="chart-mutation-count"></canvas>
-                    </div>
-                </div>
             </div>
         </section>
     `;
 
-    // Add filter change listener
-    document.getElementById('branch-filter').addEventListener('change', (e) => {
-        destroyCharts();
-        renderApp(allMetrics, e.target.value);
-    });
+    attachFilterListeners();
 
     // Create all charts
     charts = createAllCharts(filtered);

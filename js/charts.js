@@ -26,13 +26,82 @@ function errorBarDataset(data, color = chartColors.primary) {
     };
 }
 
+function releaseAnnotations(filtered) {
+    const CLUSTER_MS = 45 * 24 * 3600 * 1000;
+    const releases = filtered
+        .filter(m => !m.git_ref.startsWith('refs/'))
+        .map(m => ({ ref: m.git_ref, date: new Date(m.commit_date || m.timestamp).valueOf() }));
+
+    // Releases in close succession share one label to keep pills readable
+    const clusters = [];
+    for (const release of releases) {
+        const current = clusters[clusters.length - 1];
+        if (current && release.date - current[current.length - 1].date < CLUSTER_MS) {
+            current.push(release);
+        } else {
+            clusters.push([release]);
+        }
+    }
+
+    const annotations = {};
+    for (const cluster of clusters) {
+        for (const { ref, date } of cluster) {
+            annotations[ref] = {
+                type: 'line',
+                xMin: date,
+                xMax: date,
+                borderColor: '#d1d5db',
+                borderWidth: 1,
+                borderDash: [4, 4],
+                label: {
+                    display: false,
+                    content: cluster.length > 1
+                        ? [cluster[0].ref, `… ${cluster[cluster.length - 1].ref}`]
+                        : ref,
+                    position: 'end',
+                    yAdjust: -22,
+                    font: { size: 10 },
+                    color: '#fff',
+                    backgroundColor: 'rgba(17, 24, 39, 0.85)',
+                    borderRadius: 4,
+                    padding: { x: 6, y: 3 }
+                },
+                enter({ element }) {
+                    element.options.z = 1;
+                    element.label.options.display = true;
+                    return true;
+                },
+                leave({ element }) {
+                    element.options.z = 0;
+                    element.label.options.display = false;
+                    return true;
+                }
+            };
+        }
+    }
+    return annotations;
+}
+
 function getCommonOptions(filtered, formatAsTime = false) {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
+        layout: {
+            padding: { top: 40 }
+        },
         plugins: {
             legend: {
                 display: false
+            },
+            annotation: {
+                clip: false,
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                annotations: releaseAnnotations(filtered)
             },
             tooltip: {
                 callbacks: {
@@ -41,14 +110,23 @@ function getCommonOptions(filtered, formatAsTime = false) {
                         const m = filtered[idx];
                         return m.git_ref;
                     },
-                    label: formatAsTime ? (context) => {
-                        const value = context.parsed.y;
-                        return formatSecondsAsTime(value);
-                    } : undefined,
+                    label: (context) => {
+                        const { y, yMin, yMax } = context.parsed;
+                        const format = formatAsTime
+                            ? formatSecondsAsTime
+                            : (v) => v.toLocaleString(undefined, { maximumFractionDigits: 1 });
+                        const prefix = context.dataset.label ? `${context.dataset.label}: ` : '';
+                        const spread = (yMax - yMin) / 2;
+                        return spread > 0
+                            ? `${prefix}${format(y)} ±${format(spread)}`
+                            : `${prefix}${format(y)}`;
+                    },
                     afterBody: (items) => {
                         const idx = items[0].dataIndex;
                         const m = filtered[idx];
+                        const date = new Date(m.commit_date || m.timestamp);
                         const lines = [
+                            `Committed: ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
                             `SHA: ${m.git_sha.substring(0, 8)}`,
                         ];
                         if (m._measurement_count > 1) {
@@ -319,9 +397,9 @@ function createMemoryChart(ctx, filtered, commitDates) {
 }
 
 function createWallPerMutationChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
-    // Filter to only entries with mutation data
+    // Filter to only entries with mutation data; tooltips must index into the same subset
     const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const commonOptions = getCommonOptions(withMutations.map(({ m }) => m));
     const chartData = withMutations.map(({ m, i }) => ({
         x: commitDates[i],
         y: m.derived.wall_clock_per_mutation * 1000, // Convert to milliseconds
@@ -351,9 +429,9 @@ function createWallPerMutationChart(ctx, filtered, commitDates) {
 }
 
 function createMutationCountChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
-    // Filter to only entries with mutation data
+    // Filter to only entries with mutation data; tooltips must index into the same subset
     const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const commonOptions = getCommonOptions(withMutations.map(({ m }) => m));
     const chartData = withMutations.map(({ m, i }) => ({
         x: commitDates[i],
         y: m.mutations.total,
@@ -432,6 +510,58 @@ function createContextSwitchesChart(ctx, filtered, commitDates) {
     });
 }
 
+function createCtxPerMutationChart(ctx, filtered, commitDates) {
+    // Filter to only entries with mutation data; tooltips must index into the same subset
+    const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const commonOptions = getCommonOptions(withMutations.map(({ m }) => m));
+    const voluntaryData = withMutations.map(({ m, i }) => ({
+        x: commitDates[i],
+        y: m.derived.voluntary_ctx_per_mutation,
+        yMin: m.derived.voluntary_ctx_per_mutation - m.derived.voluntary_ctx_per_mutation_stddev,
+        yMax: m.derived.voluntary_ctx_per_mutation + m.derived.voluntary_ctx_per_mutation_stddev
+    }));
+    const involuntaryData = withMutations.map(({ m, i }) => ({
+        x: commitDates[i],
+        y: m.derived.involuntary_ctx_per_mutation,
+        yMin: m.derived.involuntary_ctx_per_mutation - m.derived.involuntary_ctx_per_mutation_stddev,
+        yMax: m.derived.involuntary_ctx_per_mutation + m.derived.involuntary_ctx_per_mutation_stddev
+    }));
+    return new Chart(ctx, {
+        type: 'lineWithErrorBars',
+        data: {
+            datasets: [
+                { label: 'Voluntary', ...errorBarDataset(voluntaryData) },
+                { label: 'Involuntary', ...errorBarDataset(involuntaryData, chartColors.secondary) }
+            ]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#6b7280',
+                        usePointStyle: true
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Switches / Mutation',
+                        color: '#6b7280'
+                    }
+                }
+            }
+        }
+    });
+}
+
 function createAllCharts(filtered) {
     const commitDates = filtered.map(m => new Date(m.commit_date || m.timestamp));
     const charts = [];
@@ -488,6 +618,11 @@ function createAllCharts(filtered) {
     const wallPerMutationCtx = document.getElementById('chart-wall-per-mutation');
     if (wallPerMutationCtx) {
         charts.push(createWallPerMutationChart(wallPerMutationCtx, filtered, commitDates));
+    }
+
+    const ctxPerMutationCtx = document.getElementById('chart-ctx-per-mutation');
+    if (ctxPerMutationCtx) {
+        charts.push(createCtxPerMutationChart(ctxPerMutationCtx, filtered, commitDates));
     }
 
     const mutationCountCtx = document.getElementById('chart-mutation-count');

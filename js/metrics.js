@@ -72,6 +72,12 @@ function processMetrics(metrics) {
         const mutationCountValues = measurements.map(m => m.mutations?.total || 0);
         const wallPerMutationValues = measurements.map(m => m.derived?.wall_clock_per_mutation || 0);
         const msiValues = measurements.map(m => m.mutations?.msi || 0);
+        const voluntaryPerMutationValues = measurements.map(m =>
+            m.mutations?.total > 0 ? m.voluntary_ctx_switches / m.mutations.total : 0
+        );
+        const involuntaryPerMutationValues = measurements.map(m =>
+            m.mutations?.total > 0 ? m.involuntary_ctx_switches / m.mutations.total : 0
+        );
 
         const wallClockMean = wallClockValues.reduce((a, b) => a + b, 0) / count;
         const memoryMean = memoryValues.reduce((a, b) => a + b, 0) / count;
@@ -85,6 +91,8 @@ function processMetrics(metrics) {
         const mutationCountMean = hasMutations ? mutationCountValues.reduce((a, b) => a + b, 0) / count : 0;
         const wallPerMutationMean = hasMutations ? wallPerMutationValues.reduce((a, b) => a + b, 0) / count : 0;
         const msiMean = hasMutations ? msiValues.reduce((a, b) => a + b, 0) / count : 0;
+        const voluntaryPerMutationMean = hasMutations ? voluntaryPerMutationValues.reduce((a, b) => a + b, 0) / count : 0;
+        const involuntaryPerMutationMean = hasMutations ? involuntaryPerMutationValues.reduce((a, b) => a + b, 0) / count : 0;
 
         processed.push({
             ...first,
@@ -115,6 +123,10 @@ function processMetrics(metrics) {
                 cpu_efficiency_stddev: stddev(cpuEfficiencyValues, cpuEfficiencyMean),
                 wall_clock_per_mutation: wallPerMutationMean,
                 wall_clock_per_mutation_stddev: hasMutations ? stddev(wallPerMutationValues, wallPerMutationMean) : 0,
+                voluntary_ctx_per_mutation: voluntaryPerMutationMean,
+                voluntary_ctx_per_mutation_stddev: hasMutations ? stddev(voluntaryPerMutationValues, voluntaryPerMutationMean) : 0,
+                involuntary_ctx_per_mutation: involuntaryPerMutationMean,
+                involuntary_ctx_per_mutation_stddev: hasMutations ? stddev(involuntaryPerMutationValues, involuntaryPerMutationMean) : 0,
             },
             _measurement_count: count,
         });

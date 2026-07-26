@@ -180,6 +180,20 @@ function renderApp(metrics, filter = 'production') {
                         <canvas id="chart-cpu-efficiency"></canvas>
                     </div>
                 </div>
+                <div class="chart-card">
+                    <h3>Context Switches Per Mutation</h3>
+                    <p class="chart-subtitle">Scheduler overhead per mutation: Voluntary = I/O waits, Involuntary = CPU preemption (lower is better)</p>
+                    <div class="chart-container">
+                        <canvas id="chart-ctx-per-mutation"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card wide">
+                    <h3>Mutation Count</h3>
+                    <p class="chart-subtitle">Total mutations generated: the denominator behind per-mutation metrics (informational)</p>
+                    <div class="chart-container">
+                        <canvas id="chart-mutation-count"></canvas>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -232,13 +246,6 @@ function renderApp(metrics, filter = 'production') {
                     <p class="chart-subtitle">Voluntary = I/O waits, Involuntary = CPU preemption (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-context-switches"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h3>Mutation Count</h3>
-                    <p class="chart-subtitle">Total mutations generated (informational)</p>
-                    <div class="chart-container">
-                        <canvas id="chart-mutation-count"></canvas>
                     </div>
                 </div>
             </div>

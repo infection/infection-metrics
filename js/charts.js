@@ -432,6 +432,58 @@ function createContextSwitchesChart(ctx, filtered, commitDates) {
     });
 }
 
+function createCtxPerMutationChart(ctx, filtered, commitDates) {
+    const commonOptions = getCommonOptions(filtered);
+    // Filter to only entries with mutation data
+    const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const voluntaryData = withMutations.map(({ m, i }) => ({
+        x: commitDates[i],
+        y: m.derived.voluntary_ctx_per_mutation,
+        yMin: m.derived.voluntary_ctx_per_mutation - m.derived.voluntary_ctx_per_mutation_stddev,
+        yMax: m.derived.voluntary_ctx_per_mutation + m.derived.voluntary_ctx_per_mutation_stddev
+    }));
+    const involuntaryData = withMutations.map(({ m, i }) => ({
+        x: commitDates[i],
+        y: m.derived.involuntary_ctx_per_mutation,
+        yMin: m.derived.involuntary_ctx_per_mutation - m.derived.involuntary_ctx_per_mutation_stddev,
+        yMax: m.derived.involuntary_ctx_per_mutation + m.derived.involuntary_ctx_per_mutation_stddev
+    }));
+    return new Chart(ctx, {
+        type: 'lineWithErrorBars',
+        data: {
+            datasets: [
+                { label: 'Voluntary', ...errorBarDataset(voluntaryData) },
+                { label: 'Involuntary', ...errorBarDataset(involuntaryData, chartColors.secondary) }
+            ]
+        },
+        options: {
+            ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#6b7280',
+                        usePointStyle: true
+                    }
+                }
+            },
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Switches / Mutation',
+                        color: '#6b7280'
+                    }
+                }
+            }
+        }
+    });
+}
+
 function createAllCharts(filtered) {
     const commitDates = filtered.map(m => new Date(m.commit_date || m.timestamp));
     const charts = [];
@@ -488,6 +540,11 @@ function createAllCharts(filtered) {
     const wallPerMutationCtx = document.getElementById('chart-wall-per-mutation');
     if (wallPerMutationCtx) {
         charts.push(createWallPerMutationChart(wallPerMutationCtx, filtered, commitDates));
+    }
+
+    const ctxPerMutationCtx = document.getElementById('chart-ctx-per-mutation');
+    if (ctxPerMutationCtx) {
+        charts.push(createCtxPerMutationChart(ctxPerMutationCtx, filtered, commitDates));
     }
 
     const mutationCountCtx = document.getElementById('chart-mutation-count');

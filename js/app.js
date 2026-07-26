@@ -159,11 +159,25 @@ function renderApp(metrics, filter = 'production') {
             <h2 class="chart-section-header">Normalized Metrics</h2>
             <p class="chart-section-description">These metrics normalize performance by mutation count and hardware, enabling fair comparison across versions and runners.</p>
             <div class="charts-grid">
-                <div class="chart-card">
+                <div class="chart-card wide">
                     <h3>Wall Clock Per Mutation</h3>
                     <p class="chart-subtitle">Average time to generate, test, and record each mutation (lower is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-wall-per-mutation"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card wide">
+                    <h3>Context Switches Per Mutation</h3>
+                    <p class="chart-subtitle">Scheduler overhead per mutation: Voluntary = I/O waits, Involuntary = CPU preemption (lower is better)</p>
+                    <div class="chart-container">
+                        <canvas id="chart-ctx-per-mutation"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card wide">
+                    <h3>Mutation Count</h3>
+                    <p class="chart-subtitle">Total mutations generated: the denominator behind per-mutation metrics (informational)</p>
+                    <div class="chart-container">
+                        <canvas id="chart-mutation-count"></canvas>
                     </div>
                 </div>
                 <div class="chart-card">
@@ -178,20 +192,6 @@ function renderApp(metrics, filter = 'production') {
                     <p class="chart-subtitle">Parallelization effectiveness: (user+sys)/(wall*cores) (higher is better)</p>
                     <div class="chart-container">
                         <canvas id="chart-cpu-efficiency"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h3>Context Switches Per Mutation</h3>
-                    <p class="chart-subtitle">Scheduler overhead per mutation: Voluntary = I/O waits, Involuntary = CPU preemption (lower is better)</p>
-                    <div class="chart-container">
-                        <canvas id="chart-ctx-per-mutation"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card wide">
-                    <h3>Mutation Count</h3>
-                    <p class="chart-subtitle">Total mutations generated: the denominator behind per-mutation metrics (informational)</p>
-                    <div class="chart-container">
-                        <canvas id="chart-mutation-count"></canvas>
                     </div>
                 </div>
             </div>

@@ -41,10 +41,17 @@ function getCommonOptions(filtered, formatAsTime = false) {
                         const m = filtered[idx];
                         return m.git_ref;
                     },
-                    label: formatAsTime ? (context) => {
-                        const value = context.parsed.y;
-                        return formatSecondsAsTime(value);
-                    } : undefined,
+                    label: (context) => {
+                        const { y, yMin, yMax } = context.parsed;
+                        const format = formatAsTime
+                            ? formatSecondsAsTime
+                            : (v) => v.toLocaleString(undefined, { maximumFractionDigits: 1 });
+                        const prefix = context.dataset.label ? `${context.dataset.label}: ` : '';
+                        const spread = (yMax - yMin) / 2;
+                        return spread > 0
+                            ? `${prefix}${format(y)} ±${format(spread)}`
+                            : `${prefix}${format(y)}`;
+                    },
                     afterBody: (items) => {
                         const idx = items[0].dataIndex;
                         const m = filtered[idx];

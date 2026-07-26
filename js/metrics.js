@@ -31,6 +31,14 @@ function filterMetrics(metrics, filter) {
     );
 }
 
+function filterByRange(metrics, range) {
+    const months = { '6m': 6, '3m': 3, '1m': 1 }[range];
+    if (!months) return metrics;
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - months);
+    return metrics.filter(m => new Date(m.commit_date || m.timestamp) >= cutoff);
+}
+
 function stddev(values, mean) {
     if (values.length < 2) return 0;
     const sqDiffs = values.map(v => Math.pow(v - mean, 2));

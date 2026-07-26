@@ -27,37 +27,50 @@ function errorBarDataset(data, color = chartColors.primary) {
 }
 
 function releaseAnnotations(filtered) {
-    const CLUSTER_MS = 21 * 24 * 3600 * 1000;
-    let prevDate = -Infinity;
-    let tier = 0;
-    return Object.fromEntries(
-        filtered
-            .filter(m => !m.git_ref.startsWith('refs/'))
-            .map((m, i) => {
-                const date = new Date(m.commit_date || m.timestamp).valueOf();
-                tier = date - prevDate < CLUSTER_MS ? 1 - tier : 0;
-                prevDate = date;
-                return [`release-${i}`, {
-                    type: 'line',
-                    xMin: date,
-                    xMax: date,
-                    borderColor: '#d1d5db',
-                    borderWidth: 1,
-                    borderDash: [4, 4],
-                    label: {
-                        display: true,
-                        content: m.git_ref,
-                        position: 'end',
-                        yAdjust: -24 - tier * 40,
-                        rotation: -90,
-                        font: { size: 9 },
-                        color: '#9ca3af',
-                        backgroundColor: 'transparent',
-                        padding: 2
-                    }
-                }];
-            })
-    );
+    const CLUSTER_MS = 45 * 24 * 3600 * 1000;
+    const releases = filtered
+        .filter(m => !m.git_ref.startsWith('refs/'))
+        .map(m => ({ ref: m.git_ref, date: new Date(m.commit_date || m.timestamp).valueOf() }));
+
+    // Releases in close succession share one label to keep pills readable
+    const clusters = [];
+    for (const release of releases) {
+        const current = clusters[clusters.length - 1];
+        if (current && release.date - current[current.length - 1].date < CLUSTER_MS) {
+            current.push(release);
+        } else {
+            clusters.push([release]);
+        }
+    }
+
+    const annotations = {};
+    for (const cluster of clusters) {
+        const labeled = cluster[Math.floor(cluster.length / 2)];
+        for (const { ref, date } of cluster) {
+            annotations[ref] = {
+                type: 'line',
+                xMin: date,
+                xMax: date,
+                borderColor: '#d1d5db',
+                borderWidth: 1,
+                borderDash: [4, 4],
+                label: {
+                    display: ref === labeled.ref,
+                    content: cluster.length > 1
+                        ? [cluster[0].ref, `… ${cluster[cluster.length - 1].ref}`]
+                        : ref,
+                    position: 'end',
+                    yAdjust: -28,
+                    font: { size: 10 },
+                    color: '#fff',
+                    backgroundColor: 'rgba(17, 24, 39, 0.85)',
+                    borderRadius: 4,
+                    padding: { x: 6, y: 3 }
+                }
+            };
+        }
+    }
+    return annotations;
 }
 
 function getCommonOptions(filtered, formatAsTime = false) {
@@ -65,7 +78,7 @@ function getCommonOptions(filtered, formatAsTime = false) {
         responsive: true,
         maintainAspectRatio: false,
         layout: {
-            padding: { top: 88 }
+            padding: { top: 48 }
         },
         plugins: {
             legend: {

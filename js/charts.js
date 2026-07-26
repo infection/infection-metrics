@@ -55,7 +55,9 @@ function getCommonOptions(filtered, formatAsTime = false) {
                     afterBody: (items) => {
                         const idx = items[0].dataIndex;
                         const m = filtered[idx];
+                        const date = new Date(m.commit_date || m.timestamp);
                         const lines = [
+                            `Committed: ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
                             `SHA: ${m.git_sha.substring(0, 8)}`,
                         ];
                         if (m._measurement_count > 1) {
@@ -326,9 +328,9 @@ function createMemoryChart(ctx, filtered, commitDates) {
 }
 
 function createWallPerMutationChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
-    // Filter to only entries with mutation data
+    // Filter to only entries with mutation data; tooltips must index into the same subset
     const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const commonOptions = getCommonOptions(withMutations.map(({ m }) => m));
     const chartData = withMutations.map(({ m, i }) => ({
         x: commitDates[i],
         y: m.derived.wall_clock_per_mutation * 1000, // Convert to milliseconds
@@ -358,9 +360,9 @@ function createWallPerMutationChart(ctx, filtered, commitDates) {
 }
 
 function createMutationCountChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
-    // Filter to only entries with mutation data
+    // Filter to only entries with mutation data; tooltips must index into the same subset
     const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const commonOptions = getCommonOptions(withMutations.map(({ m }) => m));
     const chartData = withMutations.map(({ m, i }) => ({
         x: commitDates[i],
         y: m.mutations.total,
@@ -440,9 +442,9 @@ function createContextSwitchesChart(ctx, filtered, commitDates) {
 }
 
 function createCtxPerMutationChart(ctx, filtered, commitDates) {
-    const commonOptions = getCommonOptions(filtered);
-    // Filter to only entries with mutation data
+    // Filter to only entries with mutation data; tooltips must index into the same subset
     const withMutations = filtered.map((m, i) => ({ m, i })).filter(({ m }) => m.mutations?.total > 0);
+    const commonOptions = getCommonOptions(withMutations.map(({ m }) => m));
     const voluntaryData = withMutations.map(({ m, i }) => ({
         x: commitDates[i],
         y: m.derived.voluntary_ctx_per_mutation,

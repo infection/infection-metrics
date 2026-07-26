@@ -26,6 +26,31 @@ function errorBarDataset(data, color = chartColors.primary) {
     };
 }
 
+function releaseAnnotations(filtered) {
+    return Object.fromEntries(
+        filtered
+            .filter(m => !m.git_ref.startsWith('refs/'))
+            .map((m, i) => [`release-${i}`, {
+                type: 'line',
+                xMin: new Date(m.commit_date || m.timestamp).valueOf(),
+                xMax: new Date(m.commit_date || m.timestamp).valueOf(),
+                borderColor: '#d1d5db',
+                borderWidth: 1,
+                borderDash: [4, 4],
+                label: {
+                    display: true,
+                    content: m.git_ref,
+                    position: 'start',
+                    rotation: -90,
+                    font: { size: 9 },
+                    color: '#9ca3af',
+                    backgroundColor: 'transparent',
+                    padding: 2
+                }
+            }])
+    );
+}
+
 function getCommonOptions(filtered, formatAsTime = false) {
     return {
         responsive: true,
@@ -33,6 +58,9 @@ function getCommonOptions(filtered, formatAsTime = false) {
         plugins: {
             legend: {
                 display: false
+            },
+            annotation: {
+                annotations: releaseAnnotations(filtered)
             },
             tooltip: {
                 callbacks: {

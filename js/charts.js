@@ -59,7 +59,7 @@ function releaseAnnotations(filtered) {
                         ? [cluster[0].ref, `… ${cluster[cluster.length - 1].ref}`]
                         : ref,
                     position: 'end',
-                    yAdjust: 24,
+                    yAdjust: -22,
                     font: { size: 10 },
                     color: '#fff',
                     backgroundColor: 'rgba(17, 24, 39, 0.85)',
@@ -86,11 +86,15 @@ function getCommonOptions(filtered, formatAsTime = false) {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: { top: 40 }
+        },
         plugins: {
             legend: {
                 display: false
             },
             annotation: {
+                clip: false,
                 interaction: {
                     mode: 'nearest',
                     axis: 'x',

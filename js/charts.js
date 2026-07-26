@@ -45,7 +45,6 @@ function releaseAnnotations(filtered) {
 
     const annotations = {};
     for (const cluster of clusters) {
-        const labeled = cluster[Math.floor(cluster.length / 2)];
         for (const { ref, date } of cluster) {
             annotations[ref] = {
                 type: 'line',
@@ -55,17 +54,25 @@ function releaseAnnotations(filtered) {
                 borderWidth: 1,
                 borderDash: [4, 4],
                 label: {
-                    display: ref === labeled.ref,
+                    display: false,
                     content: cluster.length > 1
                         ? [cluster[0].ref, `… ${cluster[cluster.length - 1].ref}`]
                         : ref,
                     position: 'end',
-                    yAdjust: -28,
+                    yAdjust: 24,
                     font: { size: 10 },
                     color: '#fff',
                     backgroundColor: 'rgba(17, 24, 39, 0.85)',
                     borderRadius: 4,
                     padding: { x: 6, y: 3 }
+                },
+                enter({ element }) {
+                    element.label.options.display = true;
+                    return true;
+                },
+                leave({ element }) {
+                    element.label.options.display = false;
+                    return true;
                 }
             };
         }
@@ -77,15 +84,16 @@ function getCommonOptions(filtered, formatAsTime = false) {
     return {
         responsive: true,
         maintainAspectRatio: false,
-        layout: {
-            padding: { top: 48 }
-        },
         plugins: {
             legend: {
                 display: false
             },
             annotation: {
-                clip: false,
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
                 annotations: releaseAnnotations(filtered)
             },
             tooltip: {

@@ -67,10 +67,12 @@ function releaseAnnotations(filtered) {
                     padding: { x: 6, y: 3 }
                 },
                 enter({ element }) {
+                    element.options.z = 1;
                     element.label.options.display = true;
                     return true;
                 },
                 leave({ element }) {
+                    element.options.z = 0;
                     element.label.options.display = false;
                     return true;
                 }

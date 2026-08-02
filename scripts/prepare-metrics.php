@@ -41,7 +41,8 @@ declare(strict_types=1);
  *
  * Required environment variables:
  *   CPU_CORES, COMMIT_DATE, GIT_SHA, GIT_REF, TRIGGER,
- *   CPU_MODEL, CPU_ARCH, TOTAL_MEM, IMAGE_VERSION
+ *   CPU_MODEL, CPU_ARCH, TOTAL_MEM, IMAGE_VERSION,
+ *   PHPUNIT_VERSION, STEAL_PERCENT
  */
 if ($argc < 2) {
     \fwrite(\STDERR, "Usage: php prepare-metrics.php timing.json [output.json]\n");
@@ -105,12 +106,14 @@ if ($mutations !== null && $mutations['total'] > 0) {
 }
 
 $entry = \array_merge($timing, [
+    'steal_percent' => (float) \getenv('STEAL_PERCENT'),
     'timestamp' => \gmdate('Y-m-d\TH:i:s\Z'),
     'commit_date' => \getenv('COMMIT_DATE'),
     'git_sha' => \getenv('GIT_SHA'),
     'git_ref' => \getenv('GIT_REF'),
     'trigger' => \getenv('TRIGGER'),
     'php_version' => \PHP_VERSION,
+    'phpunit_version' => \getenv('PHPUNIT_VERSION') ?: 'unknown',
     'config' => ['name' => 'baseline', 'args' => '--no-progress --threads=max'],
     'runner' => [
         'os' => 'ubuntu-latest',
